@@ -1,7 +1,8 @@
 This is my third proejkt for the subject called 'ALgortyhms and Data Structures' on the Gdańsk Univeristy of Technology
 I hope you like it ;) 
 
-List-based FIFO queue (AiSD 2021)
+**List-based FIFO queue (AiSD 2021)**
+
 Zadanie polega na implementacji kolejki FIFO opartej o listę jedno albo dwukierunkową. Jest to ono rozwinięciem zadania XOR linked list. i można w nim zastosować zaimplementowaną tam listę, można również wykorzystać szablon listy dostępny z biblioteki STL <list>.
 Poza funkcjonalnościami (ADD_BEG, ADD_END, DEL_BEG, DEL_END, PRINT_FORWARD, PRINT_BACKWARD) z zadania XOR linked list, lista udostępnia dodatkowo:
 
