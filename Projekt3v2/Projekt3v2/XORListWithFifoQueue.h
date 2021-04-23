@@ -6,7 +6,7 @@
 using namespace std;
 
 #define MAX_INPUT_LENGTH 50
-#define COM_COUNT 13
+#define COM_COUNT 12
 #define COM_LENGTH 20
 
 enum Commands {
@@ -22,114 +22,87 @@ enum Commands {
 	PRINT_QUEUE,
 	COUNT,
 	GARBAGE_SOFT,
-	GARBAGE_HARD,
+	GARBAGE_HARD
 };
 
 struct node {
 	int value;
 	node* npx;
-	bool queue = false;
 };
 
 class XORListWithFifoQueue {
+private:
+	node* head, * tail, * front, * back;
+	int listSize = 0, queueSize = 0, backPos = 0, frontPos = 0;
+
 public:
-
-	node* head, * tail, * Front, * Back;
-	int LSize, QSize, Bpos = 0, Fpos = 0;
-
-	void size()
-	{
-		printf("%d\n", LSize);
-	}
-	void count()
-	{
-		printf("%d\n", QSize);
-	}
-
-	node* XOR(struct node* FirstNode, struct node* SecondNode)
-	{
-		return (node*)((uintptr_t)(FirstNode) ^ (uintptr_t)(SecondNode));
-	}
-
-	node* searchQueueTrueNodeFromTail() {
-		node* curr = tail,* prev, * next = NULL;
-
-		while (curr->queue == false) {
-			prev = XOR(next, curr->npx);
-			next = curr;
-			curr = prev;
-		}
-
-		return curr;
-	}
-	node* searchQueueTrueNodeFromHead()
-	{
-		node* curr = head, * prev = NULL, * next;
-		while (curr->queue == false)
-		{
-			next = XOR(prev, curr->npx);
-			prev = curr;
-			curr = next;
-		}
-		return curr;
-	}
-
-	int searchQueueIndexFromTail()
-	{
-		int i = LSize - 1;
-
-		if (head != NULL)
-		{
-			node* curr = tail;
-			node* prev, * next = NULL;
-
-			while (curr->queue == false)
-			{
-				prev = XOR(next, curr->npx);
-				next = curr;
-				curr = prev;
-				i--;
-			}
-			return i;
-		}
-		else
-			return 0;
-	}
-	int searchQueueIndexFromHead()
-	{
-		if (head != NULL)
-		{
-			int i = 0;
-			node* curr = head,* prev = NULL, * next;
-
-			while (curr->queue == false)
-			{
-				next = XOR(prev, curr->npx);
-				prev = curr;
-				curr = next;
-				i++;
-			}
-
-			return i;
-		}
-		else
-			return 0;
-	}
-
 	node* getNode(int index)
 	{
 		int i = 0;
 		node* curr = head;
-		node* prev = NULL, * next;
+		node* prev = NULL, * next = XOR(head->npx, NULL);
 
-		while (i != index)
-		{
+		if (index == listSize - 1) return tail;
+		if (index == 0) return head;
+		
+		while (i != index){
+		
+			i++;
 			next = XOR(prev, curr->npx);
 			prev = curr;
 			curr = next;
-			i++;
+
 		}
 		return curr;
+	}
+	bool checkIfQueue(node * toAnalyze)
+	{
+		bool found = false;
+		if (front != NULL)
+		{
+
+			node* curr = front;
+			node* next = NULL, * prev = NULL;
+
+			if (frontPos <= listSize - 2) //Front is one before last elemet
+				next = getNode(frontPos + 1);
+			else//front to tail, next to NULL
+				next = NULL; 
+			
+			if (frontPos >= 1)
+				prev = getNode(frontPos - 1);
+			else //Fpos = 0
+				prev = NULL; 
+
+			while (true)
+			{
+				if (curr == toAnalyze) found = true;
+				if (curr == back) break;
+				
+				if (curr != head)
+				{
+					prev = XOR(next, curr->npx);
+					next = curr;
+					curr = prev;
+				}
+				else //goes from head to the tail
+				{
+					prev = XOR(tail->npx, NULL);
+					next = NULL;
+					curr = tail;
+				}
+			}
+		}
+		return found;
+	}
+
+	void showListSize()
+	{
+		printf("%d\n", listSize);
+	}
+	void showQueueSize()
+	{
+		printf("%d\n", queueSize);
 	}
 
 	void push(int value) {
@@ -139,62 +112,67 @@ public:
 		if (head == NULL)
 		{
 			newnode->npx = NULL;
-			newnode->queue = true;
-			Back = Front = head = tail = newnode;
-			LSize++;
+			back = front = head = tail = newnode;
+			listSize++;
 		}
-		else {
-			if (LSize > QSize)//lista nie jest rozszerzana
+		else
+		{
+			if (listSize > queueSize)//list is not extended
 			{
-				if (Back == NULL && Front == NULL)
+				if (back == NULL && front == NULL)
 				{
 					tail->value = value;
-					tail->queue = true;
-					Back = Front = tail;
-					Fpos = Bpos = searchQueueIndexFromTail();
+					back = front = tail;
+					frontPos = backPos = listSize - 1;
 				}
 				else
 				{
-					if (Bpos == 0)
+					if (backPos == 0)
 					{
-						tail->queue = true;
 						tail->value = value;
-						Bpos = LSize - 1;
-						Back = tail;
+						backPos = listSize - 1;
+						back = tail;
 					}
-					else if (Bpos == Fpos - 1 && Back == tail)
+					else if (backPos == frontPos - 1 && back == tail)
 					{
-						Bpos = LSize - 2;
-						Fpos = LSize - 1;
+						backPos = listSize - 2;
+						frontPos = listSize - 1;
 						node* temp = XOR(tail->npx, NULL);
 						temp->value = value;
-						temp->queue = true;
-						Back = temp;
+						back = temp;
 					}
 					else
 					{
-						node* Bfollowing = getNode(Bpos + 1);
-						node* temp = XOR(Back->npx, Bfollowing);
-						temp->queue = true;
+						node* Bfollowing = getNode(backPos + 1);
+						node* temp = XOR(back->npx, Bfollowing);
 						temp->value = value;
-						Back = temp;
-						Bpos--;
+						back = temp;
+						backPos--;
 					}
 				}
 			}
-			else {
-				newnode->npx = XOR(NULL, head);
-				head->npx = XOR(newnode, XOR(NULL, head->npx));
-				head = newnode;
-				head->queue = true;
-				Back = head;
-				Fpos++;
-				LSize++;
+			else
+			{
+				if (frontPos + 1 == backPos)
+				{
+					newnode->npx = XOR(front, back);
+					front->npx = XOR(newnode, XOR(back, front->npx));
+					back->npx = XOR(newnode, XOR(front, back->npx));
+					back = newnode;
+				}
+				else
+				{
+					newnode->npx = XOR(NULL, head);
+					head->npx = XOR(newnode, XOR(NULL, head->npx));
+					back = head = newnode;
+					frontPos++;
+				}
+				listSize++;
 			}
 		}
-		QSize++;
+		queueSize++;
 	}
-	void add_beg(int value)
+	void addBeg(int value)
 	{
 		node* newnode = new node;
 		newnode->value = value;
@@ -211,17 +189,15 @@ public:
 			head = newnode;
 		}
 
-		LSize++;
-		Bpos++;
-		Fpos++;
-		Front = getNode(Fpos);
-		Back = getNode(Bpos);
+		listSize++;
+		backPos++;
+		frontPos++;
+		front = getNode(frontPos);
+		back = getNode(backPos);
 	}
-	void add_end(int value) {
+	void addEnd(int value) {
 		node* newnode = new node;
 		newnode->value = value;
-		newnode->queue = false;
-
 
 		if (head == NULL) {
 			newnode->npx = NULL;
@@ -232,41 +208,41 @@ public:
 			tail->npx = XOR(newnode, XOR(tail->npx, NULL));
 			tail = newnode;
 		}
-		LSize++;
-
+		listSize++;
 	}
 
 	void pop()
 	{
-		if (Front != NULL)
+		if (front != NULL)
 		{
-			printf("%d\n", Front->value);
+			printf("%d\n", front->value);
 
-			if (QSize == 1)
+			if (queueSize == 1)
 			{
-				Front->queue = false;
-				QSize = 0;
-				Front = Back = NULL;
-				Bpos = Fpos = 0;
+				queueSize = 0;
+				front = back = NULL;
+				backPos = frontPos = 0;
 			}
-			else if (QSize == 2)
+			else if (queueSize == 2)
 			{
-				Front->queue = false;
-				Front = Back = searchQueueTrueNodeFromTail();
-				Fpos = Bpos = searchQueueIndexFromTail();
-				QSize = 1;
+				front = back;
+				frontPos = backPos;
+				queueSize = 1;
 			}
 			else
 			{
-				Front->queue = false;
-
-				if (Front == head)
-					Fpos = searchQueueIndexFromTail();
+				if (front == head)
+				{
+					frontPos = backPos + queueSize - 2 ;
+					front = getNode(frontPos);
+				}
 				else
-					Fpos--;
+				{
+					frontPos--;
+					front = getNode(frontPos);
+				}
 
-				QSize--;
-				Front = getNode(Fpos);
+				queueSize--;
 			}
 		}
 		else
@@ -276,7 +252,7 @@ public:
 
 
 	}
-	void del_beg()
+	void delBeg()
 	{
 		if (head != NULL)
 		{
@@ -287,18 +263,22 @@ public:
 			else
 				next->npx = XOR(head, XOR(next->npx, NULL));
 
-			if (head->queue == true)
-				QSize--;
 
-			LSize--;
+			if(frontPos == 0 || backPos == 0 || checkIfQueue(head))
+				queueSize--;
+
+			listSize--;
 
 			head = next;
 
-			if (Bpos > 0) Bpos--;
-			if (Fpos > 0) Fpos--;
+			if (backPos > 0) backPos--;
+			if (frontPos > 0) frontPos--;
+			
+			front = getNode(frontPos);
+			back = getNode(backPos);
 		}
 	}
-	void del_end()
+	void delEnd()
 	{
 		if (head != NULL)
 		{
@@ -309,21 +289,21 @@ public:
 			else
 				prev->npx = XOR(tail, XOR(prev->npx, NULL));
 
-			if (tail->queue == true)
-				QSize--;
+			if (frontPos == listSize-1 || backPos == listSize-1 || checkIfQueue(tail))
+				queueSize--;
 
-			if (tail == Back)
+			if (tail == back)
 			{
-				Back = head;
-				Bpos = 0;
+				back = head;
+				backPos = 0;
 			}
-			LSize--;
+			listSize--;
 
 			tail = prev;
 		}
 	}
 
-	void print_backward()
+	void printBackward()
 	{
 		if (head != NULL)
 		{
@@ -342,7 +322,7 @@ public:
 		else
 			printf("NULL\n");
 	}
-	void print_forward()
+	void printForward()
 	{
 		if (head != NULL)
 		{
@@ -361,44 +341,41 @@ public:
 		else
 			printf("NULL\n");
 	}
-	void print_queue()
+	void printQueue()
 	{
-		if (Front != NULL)
+		if (front != NULL)
 		{
-			int QueueCount = 0;
-
-			node* curr = Front;
+			node* curr = front;
 			node* next = NULL, * prev = NULL;
 
-			if (Fpos <= LSize - 2) 
-				next = getNode(Fpos + 1);
+			if (frontPos <= listSize - 2) 
+				next = getNode(frontPos + 1);
 			else
 				next = NULL;
 
-			if (Fpos >= 1)
-				prev = getNode(Fpos - 1);
+			if (frontPos >= 1)
+				prev = getNode(frontPos - 1);
 			else
 				prev = NULL;
 
-			while (QueueCount < QSize)
+			while (true)
 			{
-				if (curr->queue == true)
-				{
-					printf("%d ", curr->value);
-					QueueCount++;
-				}
+				printf("%d ", curr->value);
+
+				if(curr == back) break;
 
 				if (curr != head)
 				{
 					prev = XOR(next, curr->npx);
-					next = curr;
+					next = curr;	
 					curr = prev;
 				}
-				else //przejscie na koniec listy
+				else //goes from head to the tail
 				{
 					prev = XOR(tail->npx, NULL);
 					next = NULL;
 					curr = tail;
+
 				}
 			}
 
@@ -408,7 +385,7 @@ public:
 			printf("NULL\n");
 	}
 
-	void garbage_soft()
+	void garbageSoft()
 	{
 		if (head != NULL)
 		{
@@ -417,7 +394,7 @@ public:
 
 			while (NULL != curr)
 			{
-				if (curr->queue == false)
+				if (checkIfQueue(curr) == false)
 					curr->value = 0;
 
 				next = XOR(prev, curr->npx);
@@ -426,14 +403,14 @@ public:
 			}
 		}
 	}
-	void garbage_hard()
+	void garbageHard()
 	{
 		if (head != NULL)
 		{
-			if (LSize == 1 && head->queue == false)
+			if (listSize == 1 && queueSize==0)
 			{
-				LSize = 0;
-				Back = Front = head = tail = NULL;
+				listSize = 0;
+				back = front = head = tail = NULL;
 			}
 			else
 			{
@@ -445,17 +422,17 @@ public:
 
 				while (curr != NULL)
 				{
-					if (curr->queue == false)
+					if (checkIfQueue(curr) == false)
 					{
 						if (curr == head || curr == tail)
 						{
 							if (curr == head)
 							{
-								del_beg();
+								delBeg();
 							}
 							if (curr == tail)
 							{
-								del_end();
+								delEnd();
 								break;
 							}
 						}
@@ -465,14 +442,14 @@ public:
 							curr = foll2;
 							foll2 = XOR(prev, curr->npx);
 						}
-						LSize--;
+						listSize--;
 
-						if (i <= Bpos) Bpos--;
-						if (i <= Fpos) Fpos--;
+						if (i <= backPos) backPos--;
+						if (i <= frontPos) frontPos--;
 					}
 					else
 					{
-						if (LSize == QSize) break; //kazdy element listy to czesc kolejki - linijka optymalizacji
+						if (listSize == queueSize) break; //any next nodes will not be deleted
 
 						foll = XOR(prev, curr->npx);
 						prev = curr;
@@ -487,8 +464,11 @@ public:
 		}
 	}
 
-} List;
+	node* XOR(struct node* FirstNode, struct node* SecondNode)
+	{
+		return (node*)((uintptr_t)(FirstNode) ^ (uintptr_t)(SecondNode));
+	}
+} ListWithQueue;
 
 bool getCommand(int* com_index);
 void doCommand(int com_index);
-

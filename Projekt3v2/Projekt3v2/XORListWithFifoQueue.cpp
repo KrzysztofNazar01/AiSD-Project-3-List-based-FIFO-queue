@@ -1,9 +1,11 @@
+#ifndef przed_dwoma_testami
+
 #include "XORListWithFifoQueue.h"
 
 char input[MAX_INPUT_LENGTH];
 
 int main() {
-	while (scanf("%s", input) != EOF)
+	while (scanf("%49s", input) != EOF)
 	{
 		int commandIndex = 0;
 
@@ -18,7 +20,8 @@ int main() {
 
 bool getCommand(int* com_index)
 {
-	char commands[COM_COUNT][COM_LENGTH]{
+	const int sizeOfComArray = COM_COUNT + 1;
+	char commands[sizeOfComArray][COM_LENGTH]{
 		"ADD_BEG",
 		"ADD_END",
 		"DEL_BEG" ,
@@ -31,9 +34,9 @@ bool getCommand(int* com_index)
 		"PRINT_QUEUE",
 		"COUNT",
 		"GARBAGE_SOFT",
-		"GARBAGE_HARD",
+		"GARBAGE_HARD"
 	};
-	for (int j = 0; j < COM_COUNT; j++)
+	for (int j = 0; j < sizeOfComArray; j++)
 	{
 		if (strcmp(input, commands[j]) == 0)
 		{
@@ -54,44 +57,46 @@ void doCommand(int com_index)
 	switch (com_index)
 	{
 	case ADD_BEG:
-		List.add_beg(value);
+		ListWithQueue.addBeg(value);
 		break;
 	case ADD_END:
-		List.add_end(value);
+		ListWithQueue.addEnd(value);
 		break;
 	case DEL_BEG:
-		List.del_beg();
+		ListWithQueue.delBeg();
 		break;
 	case DEL_END:
-		List.del_end();
+		ListWithQueue.delEnd();
 		break;
 	case PRINT_FORWARD:
-		List.print_forward();
+		ListWithQueue.printForward();
 		break;
 	case PRINT_BACKWARD:
-		List.print_backward();
+		ListWithQueue.printBackward();
 		break;
 	case SIZE:
-		List.size();
+		ListWithQueue.showListSize();
 		break;
 	case PUSH:
-		List.push(value);
+		ListWithQueue.push(value);
 		break;
 	case POP:
-		List.pop();
+		ListWithQueue.pop();
 		break;
 	case PRINT_QUEUE:
-		List.print_queue();
+		ListWithQueue.printQueue();
 		break;
 	case COUNT:
-		List.count();
+		ListWithQueue.showQueueSize();
 		break;
 	case GARBAGE_SOFT:
-		List.garbage_soft();
+		ListWithQueue.garbageSoft();
 		break;
 	case GARBAGE_HARD:
-		List.garbage_hard();
+		ListWithQueue.garbageHard();
 		break;
 	}
 }
 
+
+#endif
